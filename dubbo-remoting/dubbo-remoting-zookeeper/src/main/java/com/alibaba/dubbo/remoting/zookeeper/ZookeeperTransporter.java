@@ -29,6 +29,8 @@ public interface ZookeeperTransporter {
 
     /**
      * 连接创建 ZookeeperClient 对象
+     * 先找 URL中 Constants.CLIENT_KEY
+     * 没有的话再找 URL中 Constants.TRANSPORTER_KEY
      *
      * @param url 注册中心地址
      * @return ZookeeperClient 对象

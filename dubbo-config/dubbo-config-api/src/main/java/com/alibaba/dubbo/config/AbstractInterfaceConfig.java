@@ -138,6 +138,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 }
             }
         }
+
         if ((registries == null || registries.isEmpty())) {
             throw new IllegalStateException((getClass().getSimpleName().startsWith("Reference")
                     ? "No such any registry to refer service in consumer "
@@ -147,7 +148,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     + Version.getVersion()
                     + ", Please add <dubbo:registry address=\"...\" /> to your spring config. If you want unregister, please set <dubbo:service registry=\"N/A\" />");
         }
-        // 读取环境变量和 properties 配置到 RegistryConfig 对象数组。
+        // 读取环境变量和 properties 配置到 RegistryConfig 对象数组。  ps:如果是个registry list，jvm又配了registry address，那所有的registry都会变成jvm配的
         for (RegistryConfig registryConfig : registries) {
             appendProperties(registryConfig);
         }
@@ -165,6 +166,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             String applicationName = ConfigUtils.getProperty("dubbo.application.name");
             if (applicationName != null && applicationName.length() > 0) {
                 application = new ApplicationConfig();
+                //名字下面appendProperties会再设置
             }
         }
         if (application == null) {
@@ -195,22 +197,28 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected List<URL> loadRegistries(boolean provider) {
         // 校验 RegistryConfig 配置数组。
         checkRegistry();
+
         // 创建 注册中心 URL 数组
         List<URL> registryList = new ArrayList<URL>();
+
         if (registries != null && !registries.isEmpty()) {
             for (RegistryConfig config : registries) {
                 // 获得注册中心的地址
                 String address = config.getAddress();
+
                 if (address == null || address.length() == 0) {
                     address = Constants.ANYHOST_VALUE;
                 }
+
+                //这里是不是有些多余啊checkRegistry()里取过
                 String sysaddress = System.getProperty("dubbo.registry.address"); // 从启动参数读取
                 if (sysaddress != null && sysaddress.length() > 0) {
                     address = sysaddress;
                 }
+
                 // 有效的地址
-                if (address.length() > 0
-                        && !RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
+                if (address.length() > 0 && !RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
+
                     Map<String, String> map = new HashMap<String, String>();
                     // 将各种配置对象，添加到 `map` 集合中。
                     appendParameters(map, application);
@@ -218,10 +226,13 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     // 添加 `path` `dubbo` `timestamp` `pid` 到 `map` 集合中。
                     map.put("path", RegistryService.class.getName());
                     map.put("dubbo", Version.getVersion());
+
                     map.put(Constants.TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));
+                    // 获取JVM进程ID
                     if (ConfigUtils.getPid() > 0) {
                         map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
                     }
+
                     // 若不存在 `protocol` 参数，默认 "dubbo" 添加到 `map` 集合中。
                     if (!map.containsKey("protocol")) {
                         if (ExtensionLoader.getExtensionLoader(RegistryFactory.class).hasExtension("remote")) { // "remote"
@@ -230,8 +241,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                             map.put("protocol", "dubbo");
                         }
                     }
+
                     // 解析地址，创建 Dubbo URL 数组。（数组大小可以为一）
                     List<URL> urls = UrlUtils.parseURLs(address, map);
+
                     // 循环 `url` ，设置 "registry" 和 "protocol" 属性。
                     for (URL url : urls) {
                         // 设置 `registry=${protocol}` 和 `protocol=registry` 到 URL
@@ -247,6 +260,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
         }
         return registryList;
+        // URL = registry://100.66.178.66:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&logger=jcl&pid=24641&qos.port=22222&registry=zookeeper&timestamp=1576034491893
     }
 
     /**
@@ -365,6 +379,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 throw new IllegalStateException("No such constructor \"public " + localClass.getSimpleName() + "(" + interfaceClass.getName() + ")\" in local implementation class " + localClass.getName());
             }
         }
+
         // `stub` 配置项的校验
         if (ConfigUtils.isNotEmpty(stub)) {
             // `stub = true` 的情况，使用接口 + `Stub` 字符串。
@@ -380,6 +395,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 throw new IllegalStateException("No such constructor \"public " + localClass.getSimpleName() + "(" + interfaceClass.getName() + ")\" in local implementation class " + localClass.getName());
             }
         }
+
         if (ConfigUtils.isNotEmpty(mock)) {
             if (mock.startsWith(Constants.RETURN_PREFIX)) { // 处理 "return " 开头的情况
                 String value = mock.substring(Constants.RETURN_PREFIX.length());

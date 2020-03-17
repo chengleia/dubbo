@@ -37,15 +37,15 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     private static final Logger logger = LoggerFactory.getLogger(AbstractEndpoint.class);
 
     /**
-     * 编解码器
+     * 编解码器 DubboCountCodec@2215
      */
     private Codec2 codec;
     /**
-     * 超时时间
+     * 超时时间 1000
      */
     private int timeout;
     /**
-     * 连接超时时间
+     * 连接超时时间 3000
      */
     private int connectTimeout;
 

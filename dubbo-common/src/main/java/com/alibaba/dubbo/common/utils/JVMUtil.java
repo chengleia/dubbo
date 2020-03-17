@@ -37,23 +37,26 @@ public class JVMUtil {
     }
 
     private static String getThreadDumpString(ThreadInfo threadInfo) {
-        StringBuilder sb = new StringBuilder("\"" + threadInfo.getThreadName() + "\"" +
-                " Id=" + threadInfo.getThreadId() + " " +
-                threadInfo.getThreadState());
+        StringBuilder sb = new StringBuilder("\"" + threadInfo.getThreadName() + "\"" + " Id=" + threadInfo.getThreadId() + " " + threadInfo.getThreadState());
+
         if (threadInfo.getLockName() != null) {
             sb.append(" on " + threadInfo.getLockName());
         }
+
         if (threadInfo.getLockOwnerName() != null) {
             sb.append(" owned by \"" + threadInfo.getLockOwnerName() +
                     "\" Id=" + threadInfo.getLockOwnerId());
         }
+
         if (threadInfo.isSuspended()) {
             sb.append(" (suspended)");
         }
+
         if (threadInfo.isInNative()) {
             sb.append(" (in native)");
         }
         sb.append('\n');
+
         int i = 0;
 
         StackTraceElement[] stackTrace = threadInfo.getStackTrace();

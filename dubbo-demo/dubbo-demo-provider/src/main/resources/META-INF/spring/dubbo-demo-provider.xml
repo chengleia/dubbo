@@ -21,91 +21,104 @@ limitations under the License.
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
        http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
-    <!-- provider's application name, used for tracing dependency relationship -->
-    <dubbo:application name="demo-provider" logger="jcl"/>
-
-    <dubbo:provider delay="-1" retries="0"  >
-        <!--<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService" protocol="pb" />-->
-    </dubbo:provider>
-
-    <!-- use multicast registry center to export service -->
-    <!--<dubbo:registry address="multicast://224.5.6.7:1234"/>-->
-    <!--<dubbo:registry address="zookeeper://127.0.0.1:2181"/>-->
-    <!--<dubbo:registry address="zookeeper://127.0.0.1:2181||10.20.153.11:2181,10.20.153.12:2181"/>-->
-    <dubbo:registry address="zookeeper://127.0.0.1:2181"  />
-    <!--<dubbo:registry address="redis://127.0.0.1:6379" />-->
-
-
-    <bean id="demoDAO" class="com.alibaba.dubbo.demo.provider.DemoDAO" />
-
-    <!-- service implementation, as same as regular local bean -->
     <bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl"/>
 
-    <!--<bean id="genericService" class="com.alibaba.dubbo.demo.provider.MyGenericService" />-->
+    <!-- chenglei Test -->
+    <dubbo:application name="demo-provider" logger="jcl" />
 
-    <!-- declare the service interface to be exported -->
-    <dubbo:service  interface="com.alibaba.dubbo.demo.DemoService" group="g1" ref="demoService" filter="demo" deprecated="false" callbacks="1000" timeout="200000" accesslog="true"
-        >
-    <!--<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" ref="demoService"/>-->
-    <!--<dubbo:service id="sa" interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl">-->
-        <!--&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;-->
-            <!--&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;-->
-            <!--&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;-->
-        <!--&lt;!&ndash;</dubbo:method>&ndash;&gt;-->
-        <!--<property name="demoDAO" ref="demoDAO" />-->
-    <!--</dubbo:service>-->
+    <dubbo:registry address="192.168.2.4:2181" protocol="zookeeper"/>
 
-    <!--<dubbo:service id="sb" interface="com.alibaba.dubbo.demo.DemoService" ref="demoService">-->
-        <!--&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;-->
-        <!--&lt;!&ndash;</dubbo:method>&ndash;&gt;-->
+    <dubbo:provider delay="-1" retries="0" protocol="pb"/>
 
-        <!--<dubbo:parameter key="threadname" value="shuaiqi" />-->
-        <!--<dubbo:parameter key="threads" value="123" />-->
-        <!--<dubbo:parameter key="queues" value="10" />-->
+    <dubbo:protocol id="pb" name="dubbo" host="" port="20881"/>
+    <dubbo:protocol id="pb2" name="dubbo" host="" port="20882"/>
 
-        <!--<dubbo:method name="callbackParam">-->
-            <!--<dubbo:argument callback="true" type="com.alibaba.dubbo.demo.ParamCallback" />-->
-        <!--</dubbo:method>-->
-        <dubbo:method name="say01" deprecated="true" />
+    <dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService"/>
 
+<!--    &lt;!&ndash; provider's application name, used for tracing dependency relationship &ndash;&gt;-->
+<!--    <dubbo:application name="demo-provider" logger="jcl" />-->
 
-    </dubbo:service>
+<!--    <dubbo:provider delay="-1" retries="0"  filter="" >-->
+<!--        &lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService" protocol="pb" />&ndash;&gt;-->
+<!--    </dubbo:provider>-->
 
-    <!--&lt;!&ndash; declare the service interface to be exported &ndash;&gt;-->
-    <!--<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" group="g2" ref="demoService" filter="demo" deprecated="false" callbacks="1000" timeout="200000" accesslog="true">-->
-        <!--&lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" ref="demoService"/>&ndash;&gt;-->
-        <!--&lt;!&ndash;<dubbo:service id="sa" interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl">&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="demoDAO" ref="demoDAO" />&ndash;&gt;-->
-        <!--&lt;!&ndash;</dubbo:service>&ndash;&gt;-->
+<!--    &lt;!&ndash; use dubbo protocol to export service on port 20880 &ndash;&gt;-->
+<!--&lt;!&ndash;    <dubbo:protocol accesslog="true" name="dubbo" port="-1" server="netty4" />&ndash;&gt;-->
+<!--    <dubbo:protocol id="pb" name="dubbo" port="20881"/>-->
 
-        <!--&lt;!&ndash;<dubbo:service id="sb" interface="com.alibaba.dubbo.demo.DemoService" ref="demoService">&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;-->
-
-        <!--&lt;!&ndash;<dubbo:parameter key="threadname" value="shuaiqi" />&ndash;&gt;-->
-        <!--&lt;!&ndash;<dubbo:parameter key="threads" value="123" />&ndash;&gt;-->
-        <!--&lt;!&ndash;<dubbo:parameter key="queues" value="10" />&ndash;&gt;-->
-
-        <!--&lt;!&ndash;<dubbo:method name="callbackParam">&ndash;&gt;-->
-        <!--&lt;!&ndash;<dubbo:argument callback="true" type="com.alibaba.dubbo.demo.ParamCallback" />&ndash;&gt;-->
-        <!--&lt;!&ndash;</dubbo:method>&ndash;&gt;-->
-        <!--<dubbo:method name="say01" deprecated="true" />-->
+<!--    &lt;!&ndash; use multicast registry center to export service &ndash;&gt;-->
+<!--    &lt;!&ndash;<dubbo:registry address="multicast://224.5.6.7:1234"/>&ndash;&gt;-->
+<!--    &lt;!&ndash;<dubbo:registry address="zookeeper://127.0.0.1:2181"/>&ndash;&gt;-->
+<!--    <dubbo:registry address="zookeeper://127.0.0.1:2181||10.20.153.11:2181,10.20.153.12:2181"/>-->
+<!--&lt;!&ndash;    <dubbo:registry address="zookeeper://devzk.dev.test.jiupaipay.com:2181"  />&ndash;&gt;-->
+<!--    &lt;!&ndash;<dubbo:registry address="redis://127.0.0.1:6379" />&ndash;&gt;-->
 
 
-    <!--</dubbo:service>-->
+<!--&lt;!&ndash;    <bean id="demoDAO" class="com.alibaba.dubbo.demo.provider.DemoDAO" />&ndash;&gt;-->
 
-    <!--<dubbo:service interface="com.alibaba.dubbo.demo.BarService" ref="genericService" timeout="200000" />-->
+<!--    &lt;!&ndash; service implementation, as same as regular local bean &ndash;&gt;-->
+<!--    <bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl"/>-->
 
-    <!-- use dubbo protocol to export service on port 20880 -->
-    <dubbo:protocol accesslog="true" name="dubbo" port="-1" server="netty4" />
-    <!--<dubbo:protocol id="pb" name="dubbo" port="20881"/>-->
+<!--    &lt;!&ndash;<bean id="genericService" class="com.alibaba.dubbo.demo.provider.MyGenericService" />&ndash;&gt;-->
+
+<!--    &lt;!&ndash; declare the service interface to be exported &ndash;&gt;-->
+<!--    <dubbo:service interface="com.alibaba.dubbo.demo.DemoService" version="1" group="g1" ref="demoService" filter="demo" deprecated="false" callbacks="1000" timeout="200000" accesslog="true">-->
+<!--    &lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" ref="demoService"/>&ndash;&gt;-->
+<!--    &lt;!&ndash;<dubbo:service id="sa" interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl">&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;-->
+<!--            &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--            &lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;<property name="demoDAO" ref="demoDAO" />&ndash;&gt;-->
+<!--    &lt;!&ndash;</dubbo:service>&ndash;&gt;-->
+
+<!--    &lt;!&ndash;<dubbo:service id="sb" interface="com.alibaba.dubbo.demo.DemoService" ref="demoService">&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;-->
+
+<!--        &lt;!&ndash;<dubbo:parameter key="threadname" value="shuaiqi" />&ndash;&gt;-->
+<!--        &lt;!&ndash;<dubbo:parameter key="threads" value="123" />&ndash;&gt;-->
+<!--        &lt;!&ndash;<dubbo:parameter key="queues" value="10" />&ndash;&gt;-->
+
+<!--        &lt;!&ndash;<dubbo:method name="callbackParam">&ndash;&gt;-->
+<!--            &lt;!&ndash;<dubbo:argument callback="true" type="com.alibaba.dubbo.demo.ParamCallback" />&ndash;&gt;-->
+<!--        &lt;!&ndash;</dubbo:method>&ndash;&gt;-->
+<!--        <dubbo:method name="say01" deprecated="true"/>-->
+
+
+<!--    </dubbo:service>-->
+
+<!--    &lt;!&ndash;&lt;!&ndash; declare the service interface to be exported &ndash;&gt;&ndash;&gt;-->
+<!--    &lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" group="g2" ref="demoService" filter="demo" deprecated="false" callbacks="1000" timeout="200000" accesslog="true">&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" ref="demoService"/>&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:service id="sa" interface="com.alibaba.dubbo.demo.DemoService" protocol="dubbo" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl">&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<property name="demoDAO" ref="demoDAO" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;</dubbo:service>&ndash;&gt;&ndash;&gt;-->
+
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:service id="sb" interface="com.alibaba.dubbo.demo.DemoService" ref="demoService">&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:method name="sayHello" retries="100">&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument index="0" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;<dubbo:argument type="com.demo.CallbackListener" callback="true" />&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;&ndash;&gt;-->
+
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:parameter key="threadname" value="shuaiqi" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:parameter key="threads" value="123" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:parameter key="queues" value="10" />&ndash;&gt;&ndash;&gt;-->
+
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:method name="callbackParam">&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;<dubbo:argument callback="true" type="com.alibaba.dubbo.demo.ParamCallback" />&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;&lt;!&ndash;</dubbo:method>&ndash;&gt;&ndash;&gt;-->
+<!--        &lt;!&ndash;<dubbo:method name="say01" deprecated="true" />&ndash;&gt;-->
+
+
+<!--    &lt;!&ndash;</dubbo:service>&ndash;&gt;-->
+
+<!--    &lt;!&ndash;<dubbo:service interface="com.alibaba.dubbo.demo.BarService" ref="genericService" timeout="200000" />&ndash;&gt;-->
 
 </beans>

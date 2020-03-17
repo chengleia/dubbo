@@ -47,9 +47,15 @@ public class FixedThreadPool implements ThreadPool {
         int queues = url.getParameter(Constants.QUEUES_KEY, Constants.DEFAULT_QUEUES);
         // 创建执行器
         return new ThreadPoolExecutor(threads, threads, 0, TimeUnit.MILLISECONDS,
-                queues == 0 ? new SynchronousQueue<Runnable>() :
-                        (queues < 0 ? new LinkedBlockingQueue<Runnable>()
-                                : new LinkedBlockingQueue<Runnable>(queues)),
+
+                queues == 0 ?
+                        new SynchronousQueue<Runnable>() :
+                        (queues < 0 ?
+                                new LinkedBlockingQueue<Runnable>()
+                                :
+                                new LinkedBlockingQueue<Runnable>(queues)
+                        ),
+
                 new NamedThreadFactory(name, true), new AbortPolicyWithReport(name, url));
     }
 

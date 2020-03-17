@@ -46,6 +46,7 @@ public class ProtocolListenerWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         // 注册中心协议
         if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
@@ -58,6 +59,7 @@ public class ProtocolListenerWrapper implements Protocol {
         // 创建带 ExporterListener 的 Exporter 对象
         return new ListenerExporterWrapper<T>(exporter, listeners);
     }
+
 
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 注册中心协议

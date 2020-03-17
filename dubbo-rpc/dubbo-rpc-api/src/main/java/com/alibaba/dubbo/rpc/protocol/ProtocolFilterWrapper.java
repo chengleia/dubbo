@@ -59,10 +59,13 @@ public class ProtocolFilterWrapper implements Protocol {
         // 获得过滤器数组
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
         // 倒序循环 Filter ，创建带 Filter 链的 Invoker 对象
+        // 是第一个要执行的filter 就要最后一个放进去
         if (!filters.isEmpty()) {
             for (int i = filters.size() - 1; i >= 0; i--) {
+
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
+
                 last = new Invoker<T>() {
 
                     @Override
@@ -95,18 +98,18 @@ public class ProtocolFilterWrapper implements Protocol {
                         return invoker.toString();
                     }
                 };
+
             }
         }
-        System.out.println("group:" + group);
-        for (Filter filter : filters) {
-            System.out.println(filter.getClass());
-        }
+
         return last;
     }
 
     public int getDefaultPort() {
         return protocol.getDefaultPort();
     }
+
+
 
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         // 注册中心
@@ -116,6 +119,7 @@ public class ProtocolFilterWrapper implements Protocol {
         // 建立带有 Filter 过滤链的 Invoker ，再暴露服务。
         return protocol.export(buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER));
     }
+
 
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 注册中心

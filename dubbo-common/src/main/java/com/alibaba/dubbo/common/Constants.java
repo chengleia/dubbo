@@ -484,7 +484,7 @@ public class Constants {
     public static final boolean DEFAULT_LAZY_CONNECT_INITIAL_STATE = true;
 
     /**
-     * To decide whether register center saves file synchronously, the default value is asynchronously
+     * 注册中心是否同步存储文件，默认异步
      */
     public static final String REGISTRY_FILESAVE_SYNC_KEY = "save.file";
 

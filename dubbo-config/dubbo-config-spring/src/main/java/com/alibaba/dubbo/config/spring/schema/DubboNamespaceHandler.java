@@ -35,6 +35,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport {
 
     @Override
     public void init() {
+        // 这里可以看出DUbbo有多少个XML标签
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
         registerBeanDefinitionParser("module", new DubboBeanDefinitionParser(ModuleConfig.class, true));
         registerBeanDefinitionParser("registry", new DubboBeanDefinitionParser(RegistryConfig.class, true));

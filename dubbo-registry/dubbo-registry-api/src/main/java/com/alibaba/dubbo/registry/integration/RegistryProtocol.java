@@ -69,6 +69,7 @@ public class RegistryProtocol implements Protocol {
     // 用于解决rmi重复暴露端口冲突的问题，已经暴露过的服务不再重新暴露
     // providerurl <--> exporter
     private final Map<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<String, ExporterChangeableWrapper<?>>();
+
     /**
      * Cluster 自适应拓展实现类对象
      */
@@ -81,6 +82,7 @@ public class RegistryProtocol implements Protocol {
      * RegistryFactory 自适应拓展实现类，通过 Dubbo SPI 自动注入。
      */
     private RegistryFactory registryFactory;
+
     private ProxyFactory proxyFactory;
 
     public RegistryProtocol() {
@@ -145,7 +147,11 @@ public class RegistryProtocol implements Protocol {
         // export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
-        // 获得注册中心 URL
+        // 获得注册中心
+        // URL =
+        // zookeeper://100.66.178.66:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0
+        // &export=dubbo%3A%2F%2F100.66.151.177%3A20881%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D100.66.151.177%26bind.port%3D20881%26default.delay%3D-1%26default.retries%3D0%26delay%3D-1%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26logger%3Djcl%26methods%3DsayHello%2CcallbackParam%2Csave%2Cupdate%2Csay03%2Cdelete%2Csay04%2Cdemo%2Csay01%2Cbye%2Csay02%2Chello02%2Csaves%2Chello01%2Chello%26pid%3D812%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1576055975122
+        // &logger=jcl&pid=812&qos.port=22222&timestamp=1576055975102
         URL registryUrl = getRegistryUrl(originInvoker);
 
         // 获得注册中心对象
@@ -153,6 +159,10 @@ public class RegistryProtocol implements Protocol {
         final Registry registry = getRegistry(originInvoker);
 
         // 获得服务提供者 URL
+        //dubbo://100.66.151.177:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider
+        // &default.delay=-1&default.retries=0&delay=-1&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService
+        // &logger=jcl&methods=sayHello,callbackParam,save,update,say03,delete,demo,say04,say01,bye,say02,hello02,saves,hello01,hello
+        // &pid=933&side=provider&timestamp=1576058935172
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
 
         //to judge to delay publish whether or not
@@ -168,8 +178,8 @@ public class RegistryProtocol implements Protocol {
         }
 
         // 使用 OverrideListener 对象，订阅配置规则
-        // Subscribe the override data
-        // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call the same service. Because the subscribed is cached key with the name of the service, it causes the subscription information to cover.
+        // 订阅override数据
+        // FIXME 提供者订阅时，会影响同一JVM即暴露服务，又引用同一服务的的场景，因为subscribed以服务名为缓存的key，导致订阅信息覆盖。
         // 创建订阅配置规则的 URL
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
         // 创建 OverrideListener 对象，并添加到 `overrideListeners` 中
@@ -177,7 +187,7 @@ public class RegistryProtocol implements Protocol {
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
         // 向注册中心，发起订阅
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
-        //Ensure that a new exporter instance is returned every time export
+        //保证每次export都返回一个新的exporter实例
         return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
     }
 
@@ -192,7 +202,11 @@ public class RegistryProtocol implements Protocol {
      */
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker) {
-        // 获得在 `bounds` 中的缓存 Key
+        // 获得在 `bounds` 中的缓存 Key = dubbo://100.66.179.119:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider
+        // &bind.ip=100.66.179.119&bind.port=20881&default.delay=-1&default.retries=0&delay=-1&dubbo=2.0.0&generic=false
+        // &interface=com.alibaba.dubbo.demo.DemoService&logger=jcl&methods=sayHello,callbackParam,save,update,say03,delete,say04,demo,say01,bye,say02,hello02,saves,hello01,hello
+        // &pid=25191&qos.port=22222&side=provider&timestamp=1576045908159
+
         String key = getCacheKey(originInvoker);
         // 从 `bounds` 获得，是不是已经暴露过服务
         ExporterChangeableWrapper<T> exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
@@ -205,7 +219,10 @@ public class RegistryProtocol implements Protocol {
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
                     // 暴露服务，创建 Exporter 对象
                     // 使用 创建的Exporter对象 + originInvoker ，创建 ExporterChangeableWrapper 对象
-                    exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
+                    exporter = new ExporterChangeableWrapper<T>(
+                            (Exporter<T>) protocol.export(invokerDelegete) ,
+                            originInvoker
+                    );
                     // 添加到 `bounds`
                     bounds.put(key, exporter);
                 }
@@ -246,6 +263,10 @@ public class RegistryProtocol implements Protocol {
      */
     private Registry getRegistry(final Invoker<?> originInvoker) {
         URL registryUrl = getRegistryUrl(originInvoker);
+        // zookeeper://100.66.178.66:2181/com.alibaba.dubbo.registry.RegistryService?
+        // application=demo-provider&dubbo=2.0.0
+        // &export=dubbo%3A%2F%2F100.66.151.177%3A20881%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D100.66.151.177%26bind.port%3D20881%26default.delay%3D-1%26default.retries%3D0%26delay%3D-1%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26logger%3Djcl%26methods%3DcallbackParam%2CsayHello%2Csave%2Cupdate%2Csay03%2Cdelete%2Csay04%2Cdemo%2Csay01%2Csay02%2Cbye%2Chello02%2Csaves%2Chello01%2Chello%26pid%3D865%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1576056813900
+        // &logger=jcl&pid=865&qos.port=22222&timestamp=1576056813884
         return registryFactory.getRegistry(registryUrl);
     }
 
@@ -326,6 +347,7 @@ public class RegistryProtocol implements Protocol {
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
         // 获得注册中心
         Registry registry = registryFactory.getRegistry(url);
+
         // TODO 芋艿
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
@@ -337,8 +359,7 @@ public class RegistryProtocol implements Protocol {
         String group = qs.get(Constants.GROUP_KEY);
         // 分组聚合，参见文档 http://dubbo.io/books/dubbo-user-book/demos/group-merger.html
         if (group != null && group.length() > 0) {
-            if ((Constants.COMMA_SPLIT_PATTERN.split(group)).length > 1
-                    || "*".equals(group)) {
+            if ((Constants.COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
                 // 执行服务引用
                 return doRefer(getMergeableCluster(), registry, type, url);
             }

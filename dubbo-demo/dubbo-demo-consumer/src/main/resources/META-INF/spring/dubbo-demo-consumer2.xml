@@ -39,7 +39,6 @@ limitations under the License.
         
     </dubbo:reference>
 
-
     <dubbo:reference id="genericService2" check="false" interface="com.alibaba.dubbo.demo.BarService" client="netty4" timeout="100000" callbacks="1000">
 
     </dubbo:reference>

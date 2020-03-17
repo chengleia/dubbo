@@ -16,6 +16,7 @@
  */
 package com.alibaba.dubbo.demo.provider;
 
+import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.dubbo.demo.Cat;
 import com.alibaba.dubbo.demo.DemoService;
 import com.alibaba.dubbo.demo.ParamCallback;
@@ -28,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 
+@Service
 public class DemoServiceImpl implements DemoService {
 
     /**

@@ -59,54 +59,54 @@ import java.util.concurrent.atomic.AtomicReference;
  * 2、读取和持久化注册数据到文件，以 properties 格式存储
  */
 public abstract class AbstractRegistry implements Registry {
+    // Log
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     // URL地址分隔符，用于文件缓存中，服务提供者URL分隔
-    // URL address separator, used in file cache, service provider URL separation
     private static final char URL_SEPARATOR = ' ';
+
     // URL地址分隔正则表达式，用于解析文件缓存中服务提供者URL列表
-    // URL address separated regular expression for parsing the service provider URL list in the file cache
     private static final String URL_SPLIT = "\\s+";
 
-    // Log output
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
     /**
-     *  本地磁盘缓存。
+     *  本地磁盘缓存 其中特殊的key值.registies记录注册中心列表，其它均为notified服务提供者列表
      *
      *  1. 其中特殊的 key 值 .registies 记录注册中心列表 TODO 8019 芋艿，特殊的 key 是
      *  2. 其它均为 {@link #notified} 服务提供者列表
      */
-    // Local disk cache, where the special key value.registies records the list of registry centers, and the others are the list of notified service providers
     private final Properties properties = new Properties();
+
     /**
-     * 注册中心缓存写入执行器。
+     * 文件缓存定时写入
      *
      * 线程数=1
      */
-    // File cache timing writing
     private final ExecutorService registryCacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("DubboSaveRegistryCache", true));
-    /**
-     * 是否同步保存文件
-     */
-    // Is it synchronized to save the file
+
+    //注册中心是否同步存储文件，默认异步
     private final boolean syncSaveFile;
+
     /**
      * 数据版本号
      *
      * {@link #properties}
      */
     private final AtomicLong lastCacheChanged = new AtomicLong();
+
     /**
      * 已注册 URL 集合。
      *
      * 注意，注册的 URL 不仅仅可以是服务提供者的，也可以是服务消费者的
      */
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
+
     /**
      * 订阅 URL 的监听器集合
      *
      * key：订阅者的 URL ，例如消费者的 URL
      */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
+
     /**
      * 被通知的 URL 集合
      *
@@ -115,15 +115,17 @@ public abstract class AbstractRegistry implements Registry {
      *            在 {@link Constants} 中，以 "_CATEGORY" 结尾
      */
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<URL, Map<String, List<URL>>>();
+
     /**
      * 注册中心 URL
      */
     private URL registryUrl;
+
     /**
      * 本地磁盘缓存文件，缓存注册中心的数据
      */
-    // Local disk cache file
     private File file;
+
     /**
      * 是否销毁
      */
@@ -131,9 +133,11 @@ public abstract class AbstractRegistry implements Registry {
 
     public AbstractRegistry(URL url) {
         setUrl(url);
-        // Start file save timer
+
+        // 启动文件保存定时器
         syncSaveFile = url.getParameter(Constants.REGISTRY_FILESAVE_SYNC_KEY, false);
-        // 获得 `file`
+
+        // 创建并获取 `file` /Users/chenglei/.dubbo/dubbo-registry-demo-provider-100.66.178.66:2181.cache
         String filename = url.getParameter(Constants.FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(Constants.APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
         File file = null;
         if (ConfigUtils.isNotEmpty(filename)) {
@@ -145,10 +149,12 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
         this.file = file;
+
         // 加载本地磁盘缓存文件到内存缓存
         loadProperties();
+
         // 通知监听器，URL 变化结果
-        notify(url.getBackupUrls()); // 【TODO 8020】为什么构造方法，要通知，连监听器都没注册
+        notify(url.getBackupUrls()); //【TODO 8020】为什么构造方法，要通知，连监听器都没注册
     }
 
     protected static List<URL> filterEmpty(URL url, List<URL> urls) {
@@ -169,6 +175,12 @@ public abstract class AbstractRegistry implements Registry {
         if (url == null) {
             throw new IllegalArgumentException("registry url == null");
         }
+
+        /*
+         *  zookeeper://100.66.178.66:2181/com.alibaba.dubbo.registry.RegistryService?
+         *  application=demo-provider&dubbo=2.0.0&interface=com.alibaba.dubbo.registry.RegistryService
+         *  &logger=jcl&pid=893&qos.port=22222&timestamp=1576058099962
+         */
         this.registryUrl = url;
     }
 

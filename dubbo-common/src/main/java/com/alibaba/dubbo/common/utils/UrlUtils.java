@@ -69,10 +69,12 @@ public class UrlUtils {
         if (defaultProtocol == null || defaultProtocol.length() == 0) { // 如果地址没有协议缺省为 dubbo
             defaultProtocol = "dubbo";
         }
+
         String defaultUsername = defaults == null ? null : defaults.get("username");
         String defaultPassword = defaults == null ? null : defaults.get("password");
         int defaultPort = StringUtils.parseInteger(defaults == null ? null : defaults.get("port"));
         String defaultPath = defaults == null ? null : defaults.get("path");
+
         Map<String, String> defaultParameters = defaults == null ? null : new HashMap<String, String>(defaults);
         if (defaultParameters != null) { // 需要移除，因为这几个是独立属性。
             defaultParameters.remove("protocol");
@@ -82,8 +84,10 @@ public class UrlUtils {
             defaultParameters.remove("port");
             defaultParameters.remove("path");
         }
+
         // 创建 Dubbo URL 。
         URL u = URL.valueOf(url);
+
         // 若 `u` 的属性存在非空的情况下，从 `defaultXXX` 属性，赋值到 `u` 的属性中。
         boolean changed = false; // 是否改变，即从 `defaultXXX` 属性，赋值到 `u` 的属性中。
         String protocol = u.getProtocol();
@@ -92,6 +96,7 @@ public class UrlUtils {
         String host = u.getHost();
         int port = u.getPort();
         String path = u.getPath();
+
         Map<String, String> parameters = new HashMap<String, String>(u.getParameters());
         if ((protocol == null || protocol.length() == 0) && defaultProtocol.length() > 0) {
             changed = true;

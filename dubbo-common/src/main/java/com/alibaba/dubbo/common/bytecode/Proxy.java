@@ -169,7 +169,7 @@ public abstract class Proxy {
                     if (pkg == null) {
                         pkg = npkg;
                     } else {
-                        if (!pkg.equals(npkg)) // 实现了两个非 public 的接口，
+                        if (!pkg.equals(npkg)) //非公有得在一个包下
                             throw new IllegalArgumentException("non-public interfaces from different packages");
                     }
                 }
@@ -190,13 +190,16 @@ public abstract class Proxy {
                     Class<?>[] pts = method.getParameterTypes();
 
                     StringBuilder code = new StringBuilder("Object[] args = new Object[").append(pts.length).append("];");
+
                     for (int j = 0; j < pts.length; j++)
                         code.append(" args[").append(j).append("] = ($w)$").append(j + 1).append(";");
+
                     code.append(" Object ret = handler.invoke(this, methods[" + ix + "], args);");
                     if (!Void.TYPE.equals(rt))
                         code.append(" return ").append(asArgument(rt, "ret")).append(";");
 
                     methods.add(method);
+
                     // 添加方法
                     ccp.addMethod(method.getName(), method.getModifiers(), rt, pts, method.getExceptionTypes(), code.toString());
                 }

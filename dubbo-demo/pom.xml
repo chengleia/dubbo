@@ -41,6 +41,7 @@ limitations under the License.
         <module>dubbo-generic-reference-demo-provider</module>
         <module>dubbo-generic-service-demo-provider</module>
         <module>dubbo-generic-service-demo-consumer</module>
+        <module>dubbo-demo-chengl</module>
     </modules>
 
     <dependencyManagement>

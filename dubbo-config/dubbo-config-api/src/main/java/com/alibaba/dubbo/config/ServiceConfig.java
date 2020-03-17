@@ -103,6 +103,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * 非配置。
      */
     private final List<URL> urls = new ArrayList<URL>();
+
     /**
      * 服务配置暴露的 Exporter 。
      * URL ：Exporter 不一定是 1：1 的关系。
@@ -113,23 +114,29 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * 非配置。
      */
     private final List<Exporter<?>> exporters = new ArrayList<Exporter<?>>();
+
     // interface type
     private String interfaceName;
+
     /**
      * {@link #interfaceName} 对应的接口类
      *
      * 非配置
      */
     private Class<?> interfaceClass;
+
     /**
      * Service 对象
      */
     // reference to interface impl
     private T ref;
+
     // service name
     private String path; // TODO 芋艿
+
     // method configuration
     private List<MethodConfig> methods;
+
     private ProviderConfig provider;
 
     /**
@@ -138,13 +145,17 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * 非配置。
      */
     private transient volatile boolean exported;
+
     /**
      * 是否已取消暴露服务，参见 {@link #unexport()} 方法。
      *
      * 非配置。
      */
     private transient volatile boolean unexported;
+
     /**
+     * 服务提供者不需要设置，会通过反射判断这个类是不是Generaic的对象
+     *
      * 是否泛化实现，参见 <a href="https://dubbo.gitbooks.io/dubbo-user-book/demos/generic-service.html">实现泛化调用</a>
      * true / false
      *
@@ -274,6 +285,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 delay = provider.getDelay();
             }
         }
+
         // 不暴露服务( export = false ) ，则不进行暴露服务逻辑。
         if (export != null && !export) {
             return;
@@ -281,13 +293,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         // 延迟暴露
         if (delay != null && delay > 0) {
+            // 定时线程池
             delayExportExecutor.schedule(new Runnable() {
                 public void run() {
                     doExport();
                 }
             }, delay, TimeUnit.MILLISECONDS);
-        // 立即暴露
         } else {
+            // 立即暴露
             doExport();
         }
     }
@@ -304,12 +317,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             return;
         }
         exported = true;
+
         // 校验接口名非空
         if (interfaceName == null || interfaceName.length() == 0) {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
         }
+
         // 拼接属性配置（环境变量 + properties 属性）到 ProviderConfig 对象
         checkDefault();
+
         // 从 ProviderConfig 对象中，读取 application、module、registries、monitor、protocols 配置对象。
         if (provider != null) {
             if (application == null) {
@@ -328,6 +344,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 protocols = provider.getProtocols();
             }
         }
+
         // 从 ModuleConfig 对象中，读取 registries、monitor 配置对象。
         if (module != null) {
             if (registries == null) {
@@ -337,6 +354,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 monitor = module.getMonitor();
             }
         }
+
         // 从 ApplicationConfig 对象中，读取 registries、monitor 配置对象。
         if (application != null) {
             if (registries == null) {
@@ -346,25 +364,31 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 monitor = application.getMonitor();
             }
         }
+
         // 泛化接口的实现
         if (ref instanceof GenericService) {
             interfaceClass = GenericService.class;
             if (StringUtils.isEmpty(generic)) {
                 generic = Boolean.TRUE.toString();
             }
+
         // 普通接口的实现
         } else {
             try {
+                //setInterface是个重载方法 可以直接设置class也可以设置 string，这里加载一下，其实可以先判断有无赋值的...
                 interfaceClass = Class.forName(interfaceName, true, Thread.currentThread().getContextClassLoader());
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
             // 校验接口和方法
             checkInterfaceAndMethods(interfaceClass, methods);
+
             // 校验指向的 service 对象
             checkRef();
+
             generic = Boolean.FALSE.toString();
         }
+
         // 处理服务接口客户端本地代理( `local` )相关。实际目前已经废弃，使用 `stub` 属性，参见 `AbstractInterfaceConfig#setLocal` 方法。
         if (local != null) {
             // 设为 true，表示使用缺省代理类名，即：接口名 + Local 后缀
@@ -381,9 +405,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
             }
         }
+
         // 处理服务接口客户端本地代理( `stub` )相关
         if (stub != null) {
-            // 设为 true，表示使用缺省代理类名，即：接口名 + Stub 后缀
+            // 设为 true，表示使用缺省代理类名，即：接口名 + Stub 后缀，
+            // 也可以直接设置成 interfaceName + "Stub"
             if ("true".equals(stub)) {
                 stub = interfaceName + "Stub";
             }
@@ -397,6 +423,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
             }
         }
+
         // 校验 ApplicationConfig 配置。
         checkApplication();
         // 校验 RegistryConfig 配置。
@@ -405,12 +432,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         checkProtocol();
         // 读取环境变量和 properties 配置到 ServiceConfig 对象。
         appendProperties(this);
+
         // 校验 Stub 和 Mock 相关的配置
         checkStubAndMock(interfaceClass);
+
         // 服务路径，缺省为接口名
         if (path == null || path.length() == 0) {
             path = interfaceName;
         }
+
         // 暴露服务
         doExportUrls();
         // TODO 芋艿，等待 qos
@@ -462,7 +492,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private void doExportUrls() {
         // 加载注册中心 URL 数组
         List<URL> registryURLs = loadRegistries(true);
-        // 循环 `protocols` ，向逐个注册中心分组暴露服务。
+
+        // 循环 `protocols` ，向逐个注册中心分组暴露服务。 <dubbo:protocol name="dubbo" port="20881" id="pb" />
         for (ProtocolConfig protocolConfig : protocols) {
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
@@ -495,12 +526,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         appendParameters(map, provider, Constants.DEFAULT_KEY); // ProviderConfig ，为 ServiceConfig 的默认属性，因此添加 `default` 属性前缀。
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
+
         // 将 MethodConfig 对象数组，添加到 `map` 集合中。
         if (methods != null && !methods.isEmpty()) {
             for (MethodConfig method : methods) {
                 // 将 MethodConfig 对象，添加到 `map` 集合中。
                 appendParameters(map, method, method.getName());
-                // 当 配置了 `MethodConfig.retry = false` 时，强制禁用重试
+
+                // 当 配置了 `MethodConfig.retry = false` 时，强制禁用重试 现在没有这个参数了
                 String retryKey = method.getName() + ".retry";
                 if (map.containsKey(retryKey)) {
                     String retryValue = map.remove(retryKey);
@@ -508,6 +541,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         map.put(method.getName() + ".retries", "0");
                     }
                 }
+
                 // 将 ArgumentConfig 对象数组，添加到 `map` 集合中。
                 List<ArgumentConfig> arguments = method.getArguments();
                 if (arguments != null && !arguments.isEmpty()) {
@@ -609,21 +643,30 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
 
         String scope = url.getParameter(Constants.SCOPE_KEY);
-        // don't export when none is configured
+
+        // 配置为none不暴露
         if (!Constants.SCOPE_NONE.toString().equalsIgnoreCase(scope)) {
 
-            // 服务本地暴露
-            // export to local if the config is not remote (export to remote only when config is remote)
+            // 服务本地暴露 配置不是remote的情况下做本地暴露 (配置为remote，则表示只暴露远程服务)
             if (!Constants.SCOPE_REMOTE.toString().equalsIgnoreCase(scope)) {
+                // URL = dubbo://100.66.179.119:20881/com.alibaba.dubbo.demo.DemoService?
+                // anyhost=true&application=demo-provider&bind.ip=100.66.179.119&
+                // bind.port=20881&default.delay=-1&default.retries=0&delay=-1&
+                // dubbo=2.0.0&generic=false&
+                // interface=com.alibaba.dubbo.demo.DemoService&logger=jcl&
+                // methods=sayHello,callbackParam,save,update,say03,delete,demo,say04,say01,say02,bye,hello02,saves,hello01,hello&
+                // pid=24688&qos.port=22222&side=provider&timestamp=1576035080779
                 exportLocal(url);
             }
 
             // 服务远程暴露
-            // export to remote if the config is not local (export to local only when config is local)
+            // 如果配置不是local则暴露为远程服务.(配置为local，则表示只暴露本地服务)
             if (!Constants.SCOPE_LOCAL.toString().equalsIgnoreCase(scope)) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
+                //registryURL = registry://100.66.178.66:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0
+                // &logger=jcl&pid=25129&qos.port=22222&registry=zookeeper&timestamp=1576044849223
                 if (registryURLs != null && !registryURLs.isEmpty()) {
                     for (URL registryURL : registryURLs) {
                         // "dynamic" ：服务是否动态注册，如果设为false，注册后将显示后disable状态，需人工启用，并且服务提供者停止时，也不会自动取消册，需人工禁用。
@@ -677,13 +720,17 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                     .setProtocol(Constants.LOCAL_PROTOCOL) // injvm
                     .setHost(LOCALHOST) // 本地
                     .setPort(0); // 端口=0
+
             // 添加服务的真实类名，例如 DemoServiceImpl ，仅用于 RestProtocol 中。
             ServiceClassHolder.getInstance().pushServiceClass(getServiceClass(ref));
+
             // 使用 ProxyFactory 创建 Invoker 对象
             // 使用 Protocol 暴露 Invoker 对象
             Exporter<?> exporter = protocol.export(proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
+
             // 添加到 `exporters`
             exporters.add(exporter);
+
             logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry");
         }
     }

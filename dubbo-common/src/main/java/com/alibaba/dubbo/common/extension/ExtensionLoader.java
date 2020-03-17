@@ -83,6 +83,7 @@ public class ExtensionLoader<T> {
      * key：拓展接口
      */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<Class<?>, ExtensionLoader<?>>();
+
     /**
      * 拓展实现类集合
      *
@@ -101,6 +102,7 @@ public class ExtensionLoader<T> {
      * 例如，Protocol
      */
     private final Class<?> type;
+
     /**
      * 对象工厂
      *
@@ -109,6 +111,7 @@ public class ExtensionLoader<T> {
      * 例如，StubProxyFactoryWrapper 中有 `Protocol protocol` 属性。
      */
     private final ExtensionFactory objectFactory;
+
     /**
      * 缓存的拓展名与拓展类的映射。
      *
@@ -117,6 +120,7 @@ public class ExtensionLoader<T> {
      * 通过 {@link #loadExtensionClasses} 加载
      */
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<Class<?>, String>();
+
     /**
      * 缓存的拓展实现类集合。
      *
@@ -225,8 +229,7 @@ public class ExtensionLoader<T> {
         }
         // 必须包含 @SPI 注解
         if (!withExtensionAnnotation(type)) {
-            throw new IllegalArgumentException("Extension type(" + type +
-                    ") is not extension, because WITHOUT @" + SPI.class.getSimpleName() + " Annotation!");
+            throw new IllegalArgumentException("Extension type(" + type + ") is not extension, because WITHOUT @" + SPI.class.getSimpleName() + " Annotation!");
         }
 
         // 获得接口对应的拓展点加载器
@@ -308,6 +311,7 @@ public class ExtensionLoader<T> {
     public List<T> getActivateExtension(URL url, String[] values, String group) {
         List<T> exts = new ArrayList<T>();
         List<String> names = values == null ? new ArrayList<String>(0) : Arrays.asList(values);
+
         // 处理自动激活的拓展对象们
         // 判断不存在配置 `"-name"` 。例如，<dubbo:service filter="-default" /> ，代表移除所有默认过滤器。
         if (!names.contains(Constants.REMOVE_VALUE_PREFIX + Constants.DEFAULT_KEY)) {
@@ -1256,6 +1260,10 @@ public class ExtensionLoader<T> {
     @Override
     public String toString() {
         return this.getClass().getName() + "[" + type.getName() + "]";
+    }
+
+    public static void main(String[] args) throws Exception{
+        Class.forName("com.mysql.jdbc.Driver");
     }
 
 }

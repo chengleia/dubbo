@@ -83,16 +83,20 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
      * 服务引用 URL 数组
      */
     private final List<URL> urls = new ArrayList<URL>();
+
     // interface name
     private String interfaceName;
+
     /**
      * {@link #interfaceName} 对应的接口类
      *
      * 非配置
      */
     private Class<?> interfaceClass;
+
     // client type
     private String client;
+
     /**
      * 直连服务地址
      *
@@ -101,23 +105,30 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
      */
     // url for peer-to-peer invocation
     private String url;
+
     // method configs
     private List<MethodConfig> methods; // TODO 芋艿
+
     // default config
     private ConsumerConfig consumer;
+
     private String protocol;
+
     // interface proxy reference
     /**
      * Service 对象
      */
     private transient volatile T ref;
+
     private transient volatile Invoker<?> invoker; // TODO 芋艿
+
     /**
      * 是否已经初始化应用服务，参见 {@link #init()} 方法。
      *
      * 非配置。
      */
     private transient volatile boolean initialized;
+
     /**
      * 是否已经销毁引用服务，参见 {@link #destroy()} 方法。
      *
@@ -235,10 +246,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     private void init() {
         // 已经初始化，直接返回
+        // 这里感觉莫名其妙上层已经synchronized都是一个个线程进来了,进来判断ref是否为空就好了，
+        // 也不会出现另一个线程在初始化，另一个线程进来的情况啊。如果是真进来了你也拦不住，只是减少了重入多次初始化的概率
         if (initialized) {
             return;
         }
         initialized = true;
+
         // 校验接口名非空
         if (interfaceName == null || interfaceName.length() == 0) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
@@ -265,10 +279,12 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             // 校验接口和方法
             checkInterfaceAndMethods(interfaceClass, methods);
         }
+
         // 直连提供者，参见文档《直连提供者》https://dubbo.gitbooks.io/dubbo-user-book/demos/explicit-target.html
         // 【直连提供者】第一优先级，通过 -D 参数指定 ，例如 java -Dcom.alibaba.xxx.XxxService=dubbo://localhost:20890
         String resolve = System.getProperty(interfaceName);
         String resolveFile = null;
+
         // 【直连提供者】第二优先级，通过文件映射，例如 com.alibaba.xxx.XxxService=dubbo://localhost:20890
         if (resolve == null || resolve.length() == 0) {
             // 默认先加载，`${user.home}/dubbo-resolve.properties` 文件 ，无需配置
@@ -298,7 +314,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 resolve = properties.getProperty(interfaceName);
             }
         }
-        // 设置直连提供者的 url
+
+        // 设置直连提供者的 url   xml或者api的就被覆盖了
         if (resolve != null && resolve.length() > 0) {
             url = resolve;
             if (logger.isWarnEnabled()) {
@@ -309,6 +326,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 }
             }
         }
+
         // 从 ConsumerConfig 对象中，读取 application、module、registries、monitor 配置对象。
         if (consumer != null) {
             if (application == null) {
@@ -342,10 +360,12 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 monitor = application.getMonitor();
             }
         }
+
         // 校验 ApplicationConfig 配置。
         checkApplication();
         // 校验 Stub 和 Mock 相关的配置
         checkStubAndMock(interfaceClass);
+
         // 将 `side`，`dubbo`，`timestamp`，`pid` 参数，添加到 `map` 集合中。
         Map<String, String> map = new HashMap<String, String>();
         Map<Object, Object> attributes = new HashMap<Object, Object>();
@@ -376,8 +396,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         appendParameters(map, module);
         appendParameters(map, consumer, Constants.DEFAULT_KEY);
         appendParameters(map, this);
+
         // 获得服务键，作为前缀
         String prefix = StringUtils.getServiceKey(map);
+
         // 将 MethodConfig 对象数组，添加到 `map` 集合中。
         if (methods != null && !methods.isEmpty()) {
             for (MethodConfig method : methods) {
@@ -430,21 +452,22 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         URL tmpUrl = new URL("temp", "localhost", 0, map);
         // 是否本地引用
         final boolean isJvmRefer;
-        // injvm 属性为空，不通过该属性判断
+
         if (isInjvm() == null) {
-            // 直连服务提供者，参见文档《直连提供者》https://dubbo.gitbooks.io/dubbo-user-book/demos/explicit-target.html
-            if (url != null && url.length() > 0) { // if a url is specified, don't do local reference
+            // injvm 属性为空，不通过该属性判断
+            if (url != null && url.length() > 0) {
+                //指定URL的情况下，不做本地引用
                 isJvmRefer = false;
-            // 通过 `tmpUrl` 判断，是否需要本地引用
             } else if (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) {
-                // by default, reference local service if there is
+                // 通过 `tmpUrl` 判断，是否需要本地引用
                 isJvmRefer = true;
-            // 默认不是
             } else {
+                // 默认不是
                 isJvmRefer = false;
             }
-        // 通过 injvm 属性。
+
         } else {
+            // 通过 injvm 属性。
             isJvmRefer = isInjvm();
         }
 
@@ -457,10 +480,11 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
+
         // 正常流程，一般为远程引用
         } else {
             // 定义直连地址，可以是服务提供者的地址，也可以是注册中心的地址
-            if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
+            if (url != null && url.length() > 0) {
                 // 拆分地址成数组，使用 ";" 分隔。
                 String[] us = Constants.SEMICOLON_SPLIT_PATTERN.split(url);
                 // 循环数组，添加到 `url` 中。
@@ -481,8 +505,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         }
                     }
                 }
-            // 注册中心
-            } else { // assemble URL from register center's configuration
+            } else {
                 // 加载注册中心 URL 数组
                 List<URL> us = loadRegistries(false);
                 // 循环数组，添加到 `url` 中。

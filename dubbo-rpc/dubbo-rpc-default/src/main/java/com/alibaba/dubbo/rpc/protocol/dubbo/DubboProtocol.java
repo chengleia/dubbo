@@ -260,12 +260,13 @@ public class DubboProtocol extends AbstractProtocol {
         return DEFAULT_PORT;
     }
 
+
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        // 创建 DubboExporter 对象，并添加到 `exporterMap` 。
+
         URL url = invoker.getUrl();
 
-        // 创建 DubboExporter 对象，并添加到 `exporterMap` 。
-        // export service.
-        String key = serviceKey(url);
+        String key = serviceKey(url); // key = com.alibaba.dubbo.demo.DemoService:20881
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
         exporterMap.put(key, exporter);
 
@@ -293,16 +294,17 @@ public class DubboProtocol extends AbstractProtocol {
         return exporter;
     }
 
+
     /**
      * 启动通信服务器
      *
      * @param url URL
      */
     private void openServer(URL url) {
-        // find server.
+        // find server. 100.66.179.119:20881
         String key = url.getAddress();
+
         //client 也可以暴露一个只有server可以调用的服务。
-        //client can export a service which's only for server to invoke
         boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true); // isserver
         if (isServer) {
             ExchangeServer server = serverMap.get(key);
@@ -323,10 +325,8 @@ public class DubboProtocol extends AbstractProtocol {
      */
     private ExchangeServer createServer(URL url) {
         // 默认开启 server 关闭时发送 READ_ONLY 事件
-        // send readonly event when server closes, it's enabled by default
         url = url.addParameterIfAbsent(Constants.CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString());
         // 默认开启 heartbeat
-        // enable heartbeat by default
         url = url.addParameterIfAbsent(Constants.HEARTBEAT_KEY, String.valueOf(Constants.DEFAULT_HEARTBEAT));
 
         // 校验 Server 的 Dubbo SPI 拓展是否存在

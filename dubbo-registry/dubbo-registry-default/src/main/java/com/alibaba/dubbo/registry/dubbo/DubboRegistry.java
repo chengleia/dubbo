@@ -63,11 +63,11 @@ public class DubboRegistry extends FailbackRegistry {
         super(registryInvoker.getUrl());
         this.registryInvoker = registryInvoker;
         this.registryService = registryService;
-        // Start reconnection timer
+        // 启动重连定时器
         int reconnectPeriod = registryInvoker.getUrl().getParameter(Constants.REGISTRY_RECONNECT_PERIOD_KEY, RECONNECT_PERIOD_DEFAULT);
         reconnectFuture = scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
             public void run() {
-                // Check and connect to the registry
+                // 检测重连注册中心
                 try {
                     connect();
                 } catch (Throwable t) { // Defensive fault tolerance
